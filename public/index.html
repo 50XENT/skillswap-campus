@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkillSwap Campus</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #727289;
+        color: #222;
+      }
+      header {
+        background: #2f5d84;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+      }
+      main {
+        max-width: 900px;
+        margin: 1.5rem auto;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      }
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: bold;
+      }
+      input,
+      textarea,
+      select,
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      button {
+        background: #2f5d84;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #24466b;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 1rem;
+        background: #fafafa;
+      }
+      .card h3 {
+        margin: 0 0 0.5rem;
+      }
+      .horizontal {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .small {
+        font-size: 0.9rem;
+        color: #555;
+      }
+      .toast {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        background: #2f5d84;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>SkillSwap Campus</h1>
+      <p>
+        Register, login, share skills, and request help from your campus
+        community.
+      </p>
+    </header>
+    <main>
+      <div class="grid" id="views"></div>
+    </main>
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
