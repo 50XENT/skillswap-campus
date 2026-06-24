@@ -8,6 +8,7 @@ const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const skillRoutes = require("./routes/skills");
 const requestRoutes = require("./routes/requests");
+const adminRoutes = require("./routes/admin");
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/api", (req, res) => {
   res.json({ message: "SkillSwap Campus backend is running" });

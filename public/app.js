@@ -1,6 +1,11 @@
 const API = window.location.origin;
 const views = document.getElementById("views");
 const toast = document.getElementById("toast");
+const copyrightYear = document.getElementById("copyright-year");
+
+if (copyrightYear) {
+  copyrightYear.textContent = new Date().getFullYear();
+}
 
 const storage = {
   get token() {
@@ -31,6 +36,42 @@ const request = async (path, options = {}) => {
 
 const render = (html) => {
   views.innerHTML = html;
+};
+
+const navLinks = document.getElementById("navLinks");
+
+const setNavLinks = (user) => {
+  navLinks.innerHTML = user
+    ? `
+      <button type="button" onclick="navigate('dashboard')">Dashboard</button>
+      <button type="button" onclick="navigate('my-skills')">My Skills</button>
+      <button type="button" onclick="navigate('history')">Requests</button>
+      <button type="button" onclick="navigate('profile')">Profile</button>
+      ${user.role === "admin" ? `<button type="button" onclick="navigate('admin')">Admin Panel</button>` : ""}
+      <button type="button" id="logoutNavBtn">Logout</button>`
+    : `
+      <button type="button" onclick="navigate('login')">Login</button>
+      <button type="button" onclick="navigate('register')">Register</button>`;
+
+  const logoutBtn = document.getElementById("logoutNavBtn");
+  if (logoutBtn) logoutBtn.onclick = logout;
+};
+
+const updateNav = async () => {
+  if (!storage.token) {
+    setNavLinks(null);
+    return;
+  }
+
+  try {
+    const user = currentUserData || await request("/api/auth/me");
+    currentUserData = user;
+    setNavLinks(user);
+  } catch {
+    storage.token = null;
+    currentUserData = null;
+    setNavLinks(null);
+  }
 };
 
 let currentUserData = null;
@@ -122,21 +163,35 @@ const renderDashboard = async () => {
 
   render(`
     <section class="card">
-      <div class="horizontal">
+      <div class="page-title">
         <div>
-          <h2>Welcome, ${user.name}</h2>
+          <h2>Welcome back, ${user.name}</h2>
           <p class="small">${user.email}</p>
         </div>
         <div class="horizontal">
-          <button id="profileBtn">Edit profile</button>
-          <button id="mySkillsBtn">My skills</button>
-          <button id="historyBtn">Request history</button>
-          <button id="logoutBtn">Logout</button>
+          <button class="secondaryBtn" id="profileBtn">Edit profile</button>
+          <button class="secondaryBtn" id="mySkillsBtn">My skills</button>
+          <button class="secondaryBtn" id="historyBtn">Request history</button>
+          <button class="secondaryBtn" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card summary-card">
+          <p class="small">Available skills</p>
+          <h3>${skills.length}</h3>
+        </div>
+        <div class="card summary-card">
+          <p class="small">Your requests</p>
+          <h3>${myRequests.length}</h3>
+        </div>
+        <div class="card summary-card">
+          <p class="small">Incoming requests</p>
+          <h3>${receivedRequests.length}</h3>
         </div>
       </div>
     </section>
     <section class="card">
-      <h2>Create Skill</h2>
+      <h2>Post a new skill</h2>
       <label>Title</label><input id="skillTitle" type="text" />
       <label>Description</label><textarea id="skillDescription"></textarea>
       <label>Tags (comma separated)</label><input id="skillTags" type="text" />
@@ -456,14 +511,14 @@ const renderMySkills = async () => {
 
   render(`
     <section class="card">
-      <div class="horizontal">
+      <div class="page-title">
         <div>
           <h2>My Skills</h2>
           <p class="small">Manage the skills you've posted.</p>
         </div>
         <div class="horizontal">
-          <button id="backBtn">Dashboard</button>
-          <button id="createSkillBtn">Create skill</button>
+          <button class="secondaryBtn" id="backBtn">Dashboard</button>
+          <button class="secondaryBtn" id="createSkillBtn">Create skill</button>
         </div>
       </div>
     </section>
@@ -484,7 +539,81 @@ const renderMySkills = async () => {
   });
 };
 
+const renderAdminPanel = async () => {
+  if (!storage.token) {
+    window.location.hash = "login";
+    return;
+  }
+
+  const [user, adminData] = await Promise.all([
+    request("/api/auth/me"),
+    request("/api/admin/overview"),
+  ]);
+
+  currentUserData = user;
+  setNavLinks(user);
+
+  render(`
+    <section class="card">
+      <div class="page-title">
+        <div>
+          <h2>Admin Control Panel</h2>
+          <p class="small">View platform activity and manage campus users from one place.</p>
+        </div>
+        <button class="secondaryBtn" id="backBtn">Back to dashboard</button>
+      </div>
+    </section>
+    <section class="summary-grid">
+      <div class="card summary-card">
+        <p class="small">Total users</p>
+        <h3>${adminData.totals.users}</h3>
+      </div>
+      <div class="card summary-card">
+        <p class="small">Total skills</p>
+        <h3>${adminData.totals.skills}</h3>
+      </div>
+      <div class="card summary-card">
+        <p class="small">Total requests</p>
+        <h3>${adminData.totals.requests}</h3>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Recent requests</h3>
+      ${adminData.requests.length === 0 ? `<p class="small">No requests yet.</p>` : adminData.requests.map((req) => `
+        <div class="card">
+          <div class="horizontal">
+            <div>
+              <h3>${req.skill.title}</h3>
+              <p class="small">Requester: ${req.requester.name} • ${req.requester.email}</p>
+              <p class="small">Skill owner: ${req.skill.owner.name || "Unknown"}</p>
+            </div>
+            <span class="badge">${req.status}</span>
+          </div>
+          ${req.message ? `<p>${req.message}</p>` : ""}
+        </div>
+      `).join("")}
+    </section>
+    <section class="card">
+      <h3>Users</h3>
+      ${adminData.users.length === 0 ? `<p class="small">No users found.</p>` : adminData.users.map((member) => `
+        <div class="card">
+          <div class="horizontal">
+            <div>
+              <h3>${member.name}</h3>
+              <p class="small">${member.email}</p>
+            </div>
+            <span class="badge">${member.role}</span>
+          </div>
+        </div>
+      `).join("")}
+    </section>
+  `);
+
+  document.getElementById("backBtn").onclick = () => navigate("dashboard");
+};
+
 const route = async () => {
+  await updateNav();
   const view = window.location.hash.replace("#", "") || "login";
   try {
     if (view === "register") renderRegister();
@@ -500,6 +629,8 @@ const route = async () => {
       await renderMySkills();
     } else if (view === "history") {
       await renderHistory();
+    } else if (view === "admin") {
+      await renderAdminPanel();
     } else if (view.startsWith("skill/")) {
       const [, skillId] = view.split("/");
       await renderSkillDetails(skillId);
